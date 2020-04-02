@@ -1,4 +1,11 @@
 <?php
+namespace JsonMapper;
+
+use ReflectionClass;
+use InvalidArgumentException;
+use JsonMapper\Exception\JsonMapper_Exception;
+use ReflectionProperty;
+
 /**
  * Part of JsonMapper
  *
@@ -647,6 +654,32 @@ class JsonMapper
                 $type = $target;
             }
         }
+
+        if(isset($jvalue->__class)){
+
+            $type = $jvalue->__class;
+
+        }
+
+        $child = $this->getSubClass($type);
+
+        if(count($child) > 0){
+
+            foreach ($child as $value) {
+                
+                $sp = $value::propertySpecificity();
+
+                if(isset($jvalue->{$sp})){
+
+                    $type = $value;
+
+                }
+
+
+            }
+
+        }
+
         return $type;
     }
 
@@ -800,5 +833,40 @@ class JsonMapper
     {
         $this->logger = $logger;
     }
+
+    protected $declaredClasses = [];
+
+    public function getSubClass($className){
+
+        $children = array();
+        foreach($this->getDeclaredClasses() as $class ){
+            if( is_subclass_of( $class, $className ) )
+                $children[] = $class;
+        }
+
+        return $children;
+
+    }
+
+    /**
+     * Get the value of declaredClasses
+     */ 
+    public function getDeclaredClasses()
+    {
+        return $this->declaredClasses;
+    }
+
+    /**
+     * Set the value of declaredClasses
+     *
+     * @return  self
+     */ 
+    public function setDeclaredClasses($declaredClasses)
+    {
+        $this->declaredClasses = $declaredClasses;
+
+        return $this;
+    }
 }
+
 ?>
